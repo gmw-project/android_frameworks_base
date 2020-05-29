@@ -1468,6 +1468,7 @@ public class VolumeDialogImpl implements VolumeDialog,
                         (isRingStream && mState.disallowRinger) ||
                         (isSystemStream && mState.disallowSystem))
                 : false;
+         final boolean routedToSubmixAndEarphone = isMusicStream && mState.routedToSubmixAndEarphone;
 
         // update slider max
         final int max = ss.levelMax * 100;
@@ -1483,11 +1484,11 @@ public class VolumeDialogImpl implements VolumeDialog,
         row.slider.setContentDescription(getStreamLabelH(ss));
 
         // update icon
-        final boolean iconEnabled = (mAutomute || ss.muteSupported) && !zenMuted;
+        final boolean iconEnabled = (mAutomute || ss.muteSupported) && !zenMuted && !routedToSubmixAndEarphone;
         row.icon.setEnabled(iconEnabled);
         final int iconRes =
                 isRingVibrate ? R.drawable.ic_volume_ringer_vibrate
-                : isRingSilent || zenMuted ? row.iconMuteRes
+                : isRingSilent || zenMuted || routedToSubmixAndEarphone ? row.iconMuteRes
                 : ss.routedToBluetooth ?
                         (ss.muted ? R.drawable.ic_volume_media_bt_mute
                                 : R.drawable.ic_volume_media_bt)
@@ -1535,14 +1536,14 @@ public class VolumeDialogImpl implements VolumeDialog,
         }
 
         // ensure tracking is disabled if zenMuted
-        if (zenMuted) {
+        if (zenMuted || routedToSubmixAndEarphone) {
             row.tracking = false;
         }
         enableVolumeRowViewsH(row, !zenMuted);
 
         // update slider
-        final boolean enableSlider = !zenMuted;
-        final int vlevel = row.ss.muted && (!isRingStream && !zenMuted) ? 0
+        final boolean enableSlider = !zenMuted && !routedToSubmixAndEarphone;
+        final int vlevel = routedToSubmixAndEarphone ? max : row.ss.muted && (!isRingStream && !zenMuted) ? 0
                 : row.ss.level;
         updateVolumeRowSliderH(row, enableSlider, vlevel);
     }
